@@ -1,0 +1,198 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cyncly Design & QA Intelligence Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script src="https://unpkg.com/lucide@0.441.0/dist/umd/lucide.min.js"></script>
+<style>
+:root{--ink:#0E1B2C;--line:#E3E7EE;--bg:#F5F7FA;--design:#4C5FD7;--iqa:#0F9D8A;--ext:#8B5CF6;--ok:#2F9E64;--bad:#D6455D;--pend:#E2A33B}
+body{font-family:'Schibsted Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.side{background:linear-gradient(180deg,#0E1B2C,#14304A)}.nav{display:flex;gap:10px;align-items:center;padding:9px 14px;border-radius:10px;color:#9FB2C8;font-size:14px;cursor:pointer;transition:.15s}
+.nav:hover{background:#ffffff12;color:#fff}.nav.on{background:#ffffff1c;color:#fff;box-shadow:inset 3px 0 0 #4FD1C0}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}.kpi b{font-size:26px;font-weight:600;letter-spacing:-.02em}
+.kpi{border-left:3px solid var(--c,var(--design))}.pill{font-size:11px;padding:2px 8px;border-radius:99px;background:#EEF1F6;color:#4A5568}
+table{width:100%;font-size:13px}th{text-align:left;font-weight:600;color:#5B677A;padding:8px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;cursor:pointer}
+td{padding:8px 10px;border-bottom:1px solid #F0F2F6}tr.row:hover{background:#F7F9FC;cursor:pointer}.num{text-align:right}
+select,input{border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:13px;background:#fff}
+.btn{background:var(--ink);color:#fff;border-radius:9px;padding:7px 14px;font-size:13px;cursor:pointer}.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.warn{border-left:3px solid var(--pend);background:#FFFBF1}.info{border-left:3px solid var(--design);background:#F4F6FF}
+.fade{animation:f .35s ease}@keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1}}@media(prefers-reduced-motion:reduce){.fade{animation:none}}
+.drop{border:2px dashed #B9C4D6;border-radius:18px;transition:.2s}.drop.hot{border-color:var(--iqa);background:#F0FBF9}
+</style></head><body>
+<div id="app" class="min-h-screen"></div><div id="drawer"></div>
+<script>
+const COL={design:'#4C5FD7',iqa:'#0F9D8A',ext:'#8B5CF6',ok:'#2F9E64',bad:'#D6455D',pend:'#E2A33B',mute:'#8A94A6'};
+const S={page:'overview',tok:null,D:null,schema:null,dq:null,hist:[],opt:null,f:{owner:'',pos:'',frm:'',to:''},ex:{q:'',status:'',route:'',page:0,sort:'start',dir:-1},busy:false,qaTab:'owners',schQ:''};
+const P=[['overview','Executive Overview','layout-dashboard'],['design','Design & Production','pencil-ruler'],['iqa','Internal QA','shield-check'],['ext','External QA','globe'],['res','Resource Intelligence','users'],['quality','Quality & Catalog','badge-check'],['explorer','Project Explorer','table-2'],['dq','Data Quality & History','database']];
+const pct=v=>v==null?'—':(v*100).toFixed(1)+'%',n=v=>v==null?'—':Math.round(v).toLocaleString(),d1=v=>v==null?'—':(+v).toLocaleString(undefined,{maximumFractionDigits:1}),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let CH=[],Q=[];
+const kpi=(l,v,s,c)=>`<div class="card kpi" style="--c:${c||COL.design}"><div class="text-xs text-slate-500">${l}</div><b>${v}</b><div class="text-xs text-slate-400 mt-1">${s||''}</div></div>`;
+const box=(t,id,h=290,sub='',span='')=>{Q.push(id);return `<div class="card ${span}"><div class="font-semibold text-[15px]">${t}</div><div class="text-xs text-slate-400 mb-2">${sub}</div><div id="${id}" style="height:${h}px"></div></div>`};
+const base=()=>({textStyle:{fontFamily:'Schibsted Grotesk'},grid:{left:48,right:16,top:34,bottom:30,containLabel:true},tooltip:{trigger:'axis',backgroundColor:'#fff',borderColor:'#E3E7EE',textStyle:{color:'#0E1B2C'},confine:true},legend:{top:0,right:0,textStyle:{color:'#5B677A'},itemWidth:10,itemHeight:10}});
+const bar=(cats,ser,o={})=>({...base(),xAxis:{type:'category',data:cats,axisLabel:{color:'#5B677A',interval:0,rotate:o.rot||0}},yAxis:{type:'value',axisLabel:{formatter:o.pct?v=>v*100+'%':null},splitLine:{lineStyle:{color:'#EEF1F6'}},max:o.max},series:ser.map(s=>({type:s.type||'bar',smooth:true,barMaxWidth:30,...s,itemStyle:{color:s.color,borderRadius:s.type=='line'?0:[4,4,0,0]},lineStyle:{color:s.color,width:2.5}}))});
+const hbar=(items,c,o={})=>{items=[...items].reverse();return {...base(),legend:{show:false},grid:{left:8,right:30,top:8,bottom:8,containLabel:true},xAxis:{type:'value',splitLine:{lineStyle:{color:'#EEF1F6'}},axisLabel:{formatter:o.pct?v=>v*100+'%':null}},yAxis:{type:'category',data:items.map(i=>i.name.length>34?i.name.slice(0,33)+'…':i.name),axisLabel:{color:'#2D3748'}},series:[{type:'bar',barMaxWidth:18,data:items.map(i=>i.value),itemStyle:{color:c,borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:'#5B677A',formatter:p=>o.pct?(p.value*100).toFixed(1)+'%':p.value}}]}};
+const donut=(items,colors)=>({...base(),tooltip:{trigger:'item'},legend:{bottom:0,textStyle:{color:'#5B677A'}},series:[{type:'pie',radius:['52%','74%'],center:['50%','44%'],itemStyle:{borderColor:'#fff',borderWidth:3,borderRadius:6},label:{formatter:'{c}',color:'#0E1B2C'},data:items.map((i,k)=>({...i,itemStyle:{color:colors[k%colors.length]}}))}]});
+const tbl=(cols,rows,cls='')=>`<div class="overflow-auto ${cls}"><table><thead><tr>${cols.map(c=>`<th class="${c.num?'num':''}">${c.h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c.num?'num':''}">${c.f?c.f(r):esc(r[c.k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+const note=(t,k='info')=>`<div class="card ${k} text-[13px] text-slate-600">${t}</div>`;
+const qchip=v=>v==null?'<span class="text-slate-300">—</span>':`<span style="color:${v>=.95?COL.ok:v>=.85?COL.pend:COL.bad};font-weight:600">${pct(v)}</span>`;
+
+/* ---------- data ---------- */
+async function upload(file){S.busy=true;draw();const fd=new FormData();fd.append('file',file);
+ try{const r=await fetch('/api/upload',{method:'POST',body:fd});if(!r.ok)throw new Error((await r.json()).detail);const j=await r.json();Object.assign(S,{tok:j.token,D:j.dash,schema:j.schema,dq:j.dq,hist:j.history,opt:j.options,meta:j.meta,page:'overview',f:{owner:'',pos:'',frm:'',to:''}});}
+ catch(e){alert('Upload failed: '+e.message)}S.busy=false;draw();}
+async function refilter(){const p=new URLSearchParams({token:S.tok,...S.f});const r=await fetch('/api/dashboard?'+p);if(!r.ok){alert((await r.json()).detail);return}S.D=await r.json();S.ex.page=0;draw();}
+const setF=(k,v)=>{S.f[k]=v;refilter()};
+const go=p=>{S.page=p;draw()};
+
+/* ---------- pages ---------- */
+function landing(){return `<div class="min-h-screen side flex items-center justify-center p-8"><div class="max-w-3xl w-full text-white">
+<div class="text-sm text-teal-300 mb-3">Cyncly · Design & QA Intelligence</div>
+<h1 class="text-5xl font-semibold tracking-tight leading-[1.05] mb-5">One weekly workbook.<br>The whole design and QA picture.</h1>
+<p class="text-slate-300 text-lg max-w-xl mb-8">Upload <b class="text-white">Design_Dashboard.xlsx</b>. The portal reads every column, validates it, and builds resource-wise, quality-focused dashboards from your actual records — nothing is simulated.</p>
+<label id="dz" class="drop block p-10 text-center cursor-pointer bg-white/5"><input type="file" id="fi" accept=".xlsx,.xlsm" class="hidden">
+${S.busy?'<div class="text-lg">Reading workbook, validating, calculating KPIs…</div>':'<i data-lucide="upload-cloud" class="mx-auto mb-3" style="width:36px;height:36px"></i><div class="text-lg font-medium">Drop the workbook here or click to browse</div><div class="text-sm text-slate-400 mt-1">.xlsx · processed locally · original data is never altered</div>'}</label>
+${S.hist?.length?`<div class="text-xs text-slate-400 mt-4">Last upload: ${esc(S.hist[0].filename)} · ${esc(S.hist[0].uploaded)}</div>`:''}</div></div>`}
+
+function filters(){const o=S.opt;return `<div class="flex flex-wrap gap-2 items-center mb-5"><span class="text-xs text-slate-500">Filter</span>
+<select onchange="setF('owner',this.value)"><option value="">All project owners</option>${o.owners.map(x=>`<option ${S.f.owner==x?'selected':''}>${esc(x)}</option>`).join('')}</select>
+<select onchange="setF('pos',this.value)"><option value="">All regions / POS</option>${o.pos.map(x=>`<option ${S.f.pos==x?'selected':''}>${esc(x)}</option>`).join('')}</select>
+<span class="text-xs text-slate-500">Project start</span><input type="month" value="${S.f.frm}" min="${o.min}" max="${o.max}" onchange="setF('frm',this.value)"><input type="month" value="${S.f.to}" min="${o.min}" max="${o.max}" onchange="setF('to',this.value)">
+${Object.values(S.f).some(Boolean)?`<button class="btn ghost" onclick="S.f={owner:'',pos:'',frm:'',to:''};refilter()">Clear</button>`:''}<span class="pill ml-auto">${n(S.D.kpi.entries)} entries in view</span></div>`}
+
+function overview(){const k=S.D.kpi,m=S.D.monthly,q=S.D.qa_monthly,ow=S.D.owners.slice(0,12);
+return `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+${kpi('Project entries',n(k.entries),`${k.projects} distinct project codes · ${k.manufacturers} manufacturers`)}
+${kpi('Completed (Live)',n(k.completed),`${n(k.in_progress)} in progress · ${n(k.on_hold)} on hold`,COL.ok)}
+${kpi('Project on track',pct(k.on_track_pct),'Share of entries flagged Yes',COL.ok)}
+${kpi('Customer acceptance',pct(k.accept_pct),'Acceptance flag = Yes',COL.ok)}
+${kpi('Hours consumed',d1(k.cons_hours),`of ${d1(k.est_hours)} estimated · ${pct(k.hour_util)}`)}
+${kpi('QA hours logged',d1(k.qa_hours),`on ${k.qa_hours_entries} entries that recorded them`,COL.iqa)}
+${kpi('Products tested (1st draft)',n(k.fd_tested),`${n(k.fd_ok)} OK · ${n(k.fd_not_ok)} not OK · ${k.fd_entries} entries`,COL.iqa)}
+${kpi('Overall quality (1st draft)',pct(k.fd_quality),'Σ OK ÷ Σ tested, not an average of %',COL.iqa)}</div>
+<div class="grid lg:grid-cols-3 gap-4">
+${box('Monthly project and delivery trend','c1',300,'Entries by start, delivery and acceptance month','lg:col-span-2')}
+${box('Project status','c2',300,'Live = completed; On-Hold; all other phases = in progress')}
+${box('QA route per entry','c3',280,'How each entry was quality-checked')}
+${box('First-draft QA: OK vs Not OK','c4',280,'Products tested by internal QA')}
+${box('First-draft quality trend','c5',280,'By month of proposed delivery to QA')}
+${box('Workload by project owner','c6',320,'Entries by status; sorted by volume','lg:col-span-3')}</div>`}
+function overviewC(){const m=S.D.monthly,q=S.D.qa_monthly,k=S.D.kpi,ow=S.D.owners.slice(0,14);
+ return {c1:bar(m.months,[{name:'Started',type:'line',data:m.started,color:COL.design},{name:'Delivered',type:'line',data:m.delivered,color:COL.iqa},{name:'Accepted',type:'line',data:m.accepted,color:COL.ok}]),
+ c2:donut(S.D.design.status,[COL.ok,COL.design,COL.pend,COL.mute]),
+ c3:donut(S.D.iqa.routing.map(r=>({name:r.name,value:r.value})),[COL.design,COL.iqa,COL.ext,COL.pend,COL.mute]),
+ c4:donut([{name:'OK',value:k.fd_ok},{name:'Not OK (tested − OK)',value:k.fd_not_ok}],[COL.ok,COL.bad]),
+ c5:{...bar(q.months,[{name:'Quality',type:'line',data:q.quality,color:COL.iqa,markLine:{silent:true,symbol:'none',data:[{yAxis:.95}],lineStyle:{color:COL.pend,type:'dashed'},label:{formatter:'95% gate'}}}],{pct:1,max:1})},
+ c6:bar(ow.map(o=>o.name),[{name:'Completed',data:ow.map(o=>o.completed),color:COL.ok,stack:'a'},{name:'In progress',data:ow.map(o=>o.in_progress),color:COL.design,stack:'a'},{name:'On hold',data:ow.map(o=>o.on_hold),color:COL.pend,stack:'a'}],{rot:25})}}
+
+function design(){const D=S.D.design,k=S.D.kpi;
+return `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">${kpi('Delivered to customer',n(k.delivered),'entries with an actual delivery date')}${kpi('Hour utilisation',pct(k.hour_util),'Σ consumed ÷ Σ estimated')}${kpi('Entries delivered late',pct(k.late_pct),`actual vs proposed date · avg ${d1(D.avg_days_late)} days when late`,COL.pend)}${kpi('Post-delivery requests',n(k.pd_requests),`${n(k.corrections)} corrections`,COL.pend)}</div>
+${note('Late-delivery % compares Actual vs Proposed delivery date. The workbook appears to overwrite the proposed date when plans slip (New Proposed Delivery Date is empty), so treat this as a floor; <b>Project On Track</b> is the more reliable delay signal.','warn')}
+<div class="grid lg:grid-cols-3 gap-4 mt-4">
+${box('Estimated vs consumed hours by owner','d1',300,'','lg:col-span-2')}${box('Delivery timing vs proposed date','d2',300)}
+${box('Entries by catalog type','d3',240)}${box('Entries by region / POS','d4',240)}${box('Entries by contract type','d5',240)}
+${box('Weekly workload (project starts)','d6',260,'Last 16 weeks of data','lg:col-span-2')}${box('Why projects are not on track','d7',260,'Top comments')}
+${box('Post-delivery customer feedback mix','d8',260)}${box('Customer-found issues by quality gate','d9',260)}
+<div class="card lg:col-span-1"><div class="font-semibold mb-2">Largest hour overruns</div><div class="text-xs text-slate-400 mb-2">Consumed &gt; 120% of estimate, estimate ≥ 2h</div>${tbl([{h:'Project',f:r=>esc(r.name.slice(0,38))},{h:'Owner',k:'owner'},{h:'Used',num:1,f:r=>pct(r.pct)}],D.overruns,'max-h-[230px]')}</div></div>`}
+function designC(){const D=S.D.design,o=S.D.owners,w=S.D.weekly;return {
+ d1:bar(o.map(x=>x.name),[{name:'Estimated',data:o.map(x=>x.est),color:'#B8C0F0'},{name:'Consumed',data:o.map(x=>x.cons),color:COL.design}],{rot:30}),
+ d2:donut(D.delay_buckets,[COL.ok,COL.ok,COL.pend,COL.pend,COL.bad,COL.bad]),d3:hbar(D.type,COL.design),d4:donut(D.pos,[COL.design,COL.iqa]),d5:hbar(D.contract,COL.design),
+ d6:bar(w.weeks,[{name:'Entries started',data:w.entries,color:COL.design}]),d7:hbar(D.not_on_track_reasons,COL.pend),d8:hbar(D.feedback.map(f=>({name:f.name,value:f.value})),COL.pend),
+ d9:hbar(D.customer_gates.map(g=>({name:g.name,value:g.value})),COL.bad)}}
+
+function iqa(){const I=S.D.iqa,k=S.D.kpi;
+return `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">${kpi('Products requested',n(I.first_requested),'1st draft (client request)',COL.iqa)}${kpi('Products tested',n(I.first.tested),`${I.first.entries} entries with QA counts`,COL.iqa)}${kpi('OK / Not OK',`${n(I.first.ok)} / ${n(I.first.not_ok)}`,'Not OK = tested − OK',COL.iqa)}${kpi('1st draft quality',pct(I.first.quality),'Σ OK ÷ Σ tested',COL.iqa)}
+${kpi('QA hours',d1(I.qa_hours),'recorded entries only',COL.iqa)}${kpi('QA queries (1st draft)',n(I.queries),'almost all blank/0 in source',COL.iqa)}${kpi('Entries below 95% gate',n(I.rework_n),'candidates for rework',COL.bad)}${kpi('QA reports linked',n(I.report_available),'entries with a report location',COL.iqa)}</div>
+<div class="grid lg:grid-cols-3 gap-4">
+${box('First vs second draft quality','i1',280,`2nd draft has only ${I.second.entries} entries — indicative, not statistical`)}
+${box('Issues by quality gate','i2',280,'Found by internal QA (1st draft) vs found by customer after delivery','lg:col-span-2')}
+${box('1st-draft QA status','i3',300,'','lg:col-span-2')}${box('Quality and volume over time','i4',300,'Bars = products tested')}
+${box('QA workload by person','i5',300,'Entries credited (shared entries split equally)','lg:col-span-3')}
+<div class="card lg:col-span-3"><div class="font-semibold mb-1">Projects requiring rework</div><div class="text-xs text-slate-400 mb-2">Lowest first-draft quality (&lt; 95% gate defined in List sheet)</div>${tbl([{h:'Project',f:r=>esc(r.name.slice(0,70))},{h:'Owner',k:'owner'},{h:'QA person',k:'qa'},{h:'Tested',num:1,f:r=>n(r.tested)},{h:'OK',num:1,f:r=>n(r.ok)},{h:'Quality',num:1,f:r=>qchip(r.q)}],I.rework,'max-h-[320px]')}</div></div>
+${note(`Post-delivery QA fields (${I.post_delivery_populated} populated rows) and most 2nd-draft fields are empty in this workbook, so those analyses are shown as unavailable rather than estimated.`,'warn')}`}
+function iqaC(){const I=S.D.iqa,q=S.D.qa_monthly,p=S.D.qa_people;return {
+ i1:bar(['1st draft','2nd draft'],[{name:'Quality',data:[I.first.quality,I.second.quality],color:COL.iqa,label:{show:true,formatter:x=>pct(x.value),position:'top'}}],{pct:1,max:1.1}),
+ i2:bar(I.gates_first.map(g=>g.name),[{name:'Internal QA (1st draft)',data:I.gates_first.map(g=>g.value),color:COL.iqa},{name:'Customer (post-delivery)',data:I.gates_customer.map(g=>g.value),color:COL.pend}],{rot:12}),
+ i3:hbar(I.status1,COL.iqa),
+ i4:{...bar(q.months,[{name:'Products tested',data:q.tested,color:'#BFE6E0'},{name:'Quality',type:'line',yAxisIndex:1,data:q.quality,color:COL.iqa}]),yAxis:[{type:'value',splitLine:{lineStyle:{color:'#EEF1F6'}}},{type:'value',max:1,axisLabel:{formatter:v=>v*100+'%'},splitLine:{show:false}}]},
+ i5:bar(p.map(x=>x.name),[{name:'Internal QA entries',data:p.map(x=>x.qa_entries),color:COL.iqa,stack:'a'},{name:'Self-QA only entries',data:p.map(x=>x.self_entries),color:COL.design,stack:'a'}])}}
+
+function ext(){const E=S.D.ext,q=E.q1,o=E.overlap;
+return `${note(`<b>The workbook has no External QA field group.</b> There is no external QA team, assignee, submission, accept/reject, defect, rework, hours or turnaround column, so those pages of analysis cannot be produced without inventing data. What exists is the <b>Q1 QA track</b> — three columns (Tested / OK / Quality % in Q1) plus the routing status <i>"Delivered with Q1 QA Only"</i> — shown below. Whether "Q1" means an external vendor, a QA level or a process stage is not defined in the Notes sheet; please confirm so it can be labelled correctly.`,'warn')}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 my-4">${kpi('Entries routed to Q1 QA only',n(S.D.kpi.q1_entries),'QA Required at Cyncly = Delivered with Q1 QA Only',COL.ext)}${kpi('Entries with Q1 counts',n(q.entries),'Tested / OK populated',COL.ext)}${kpi('Products tested in Q1',n(q.tested),`${n(q.ok)} OK`,COL.ext)}${kpi('Q1 catalog quality',pct(q.quality),'Σ OK ÷ Σ tested',COL.ext)}</div>
+<div class="grid lg:grid-cols-3 gap-4">${box('Q1 quality by QA route','e1',280,'Q1 counts also appear on entries with other routes')}
+${box('Q1 products tested by owner','e2',280,'Volume context — a few large catalogs dominate','lg:col-span-2')}
+<div class="card lg:col-span-3"><div class="font-semibold">Q1 vs first-draft QA on the same entries</div><div class="text-xs text-slate-400 mb-3">Only ${o.rows} entries have both. Definitions differ (Q1 can include customer feedback tested), so this is context, not a like-for-like score.</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">${kpi('Overlapping entries',o.rows,'',COL.mute)}${kpi('First-draft quality',pct(o.fd),`${n(o.tested_fd)} tested`,COL.iqa)}${kpi('Q1 quality',pct(o.q1),`${n(o.tested_q1)} tested`,COL.ext)}${kpi('"CiC QA required" entries',E.cic,'only external-sounding status in List',COL.mute)}</div></div></div>`}
+function extC(){const E=S.D.ext,o=S.D.owners.filter(x=>x.q1_tested>0);return {
+ e1:bar(E.q1_by_routing.map(r=>r.name.replace('Delivered with ','')),[{name:'Q1 quality',data:E.q1_by_routing.map(r=>r.quality),color:COL.ext,label:{show:true,formatter:x=>pct(x.value),position:'top'}}],{pct:1,max:1.1,rot:10}),
+ e2:bar(o.map(x=>x.name),[{name:'Tested in Q1',data:o.map(x=>x.q1_tested),color:COL.ext}],{rot:25})}}
+
+function res(){const t=S.qaTab,own=S.D.owners,qp=S.D.qa_people;
+const tabs=[['owners','Project owners'],['qa','QA / Self-QA people'],['am','Account managers']];
+const body=t=='owners'?`<div class="grid lg:grid-cols-3 gap-4">${box('Entries and hour utilisation','r1',300,'Bars = entries · line = % of estimated hours consumed','lg:col-span-2')}${box('Monthly workload heatmap','r2',300,'Entries started per month, 2026')}
+<div class="card lg:col-span-3"><div class="font-semibold mb-1">Project owner scorecard</div><div class="text-xs text-slate-400 mb-2">Assigned work and delivered work shown separately. Quality is the quality of QA'd products on that owner's entries, with volume — read together, not ranked.</div>
+${tbl([{h:'Owner',f:r=>esc(r.name)+(r.low_volume?' <span class="pill">low volume</span>':'')},{h:'Assigned',num:1,f:r=>n(r.entries)},{h:'Delivered',num:1,f:r=>n(r.delivered)},{h:'Completed',num:1,f:r=>n(r.completed)},{h:'On hold',num:1,f:r=>n(r.on_hold)},{h:'Est h',num:1,f:r=>d1(r.est)},{h:'Used h',num:1,f:r=>d1(r.cons)},{h:'Util',num:1,f:r=>pct(r.util)},{h:'On track',num:1,f:r=>pct(r.on_track)},{h:'Post-del. req.',num:1,f:r=>n(r.pd_req)},{h:'Tested (1st)',num:1,f:r=>n(r.fd_tested)},{h:'Quality (1st)',num:1,f:r=>qchip(r.fd_quality)},{h:'Q1 tested',num:1,f:r=>n(r.q1_tested)},{h:'Q1 quality',num:1,f:r=>qchip(r.q1_quality)}],own,'max-h-[480px]')}</div></div>`
+:t=='qa'?`<div class="grid lg:grid-cols-2 gap-4">${box('QA and Self-QA workload','r3',300,'Credited entries (multi-person cells split equally — no double counting)')}${box('Quality of products tested','r4',300,'Σ OK ÷ Σ tested, with volume in tooltip')}
+<div class="card lg:col-span-2">${tbl([{h:'Person',f:r=>esc(r.name)+(r.low_volume?' <span class="pill">low volume</span>':'')},{h:'Credited entries',num:1,f:r=>d1(r.entries)},{h:'Shared',num:1,f:r=>r.shared},{h:'QA required',num:1,f:r=>r.qa_entries},{h:'Self-QA only',num:1,f:r=>r.self_entries},{h:'Tested',num:1,f:r=>d1(r.tested)},{h:'OK',num:1,f:r=>d1(r.ok)},{h:'Quality',num:1,f:r=>qchip(r.quality)},{h:'QA hours',num:1,f:r=>d1(r.qa_hours)},{h:'Reports',num:1,f:r=>r.reports}],qp)}</div></div>`
+:`<div class="grid lg:grid-cols-2 gap-4">${box('Entries by account manager','r5',380,'Top 12')}</div>`;
+return `${note('<b>Fair-comparison rules:</b> people carry different volumes and project types, so every table shows volume next to every rate and tags low-volume rows. Design, Internal QA and Project Owner are separate fields in the workbook. <b>No external-QA resource field exists</b>, so none is shown. Entries naming several people are split equally; abbreviated names that cannot be matched are grouped as "Unresolved".')}
+<div class="flex gap-2 my-4">${tabs.map(([k,l])=>`<button class="btn ${t==k?'':'ghost'}" onclick="S.qaTab='${k}';draw()">${l}</button>`).join('')}</div>${body}`}
+function resC(){const t=S.qaTab,own=S.D.owners,qp=S.D.qa_people,h=S.D.owner_heat;
+ if(t=='owners')return {r1:{...bar(own.map(x=>x.name),[{name:'Entries',data:own.map(x=>x.entries),color:COL.design},{name:'Hours used / estimated',type:'line',yAxisIndex:1,data:own.map(x=>x.util),color:COL.pend}],{rot:30}),yAxis:[{type:'value',splitLine:{lineStyle:{color:'#EEF1F6'}}},{type:'value',axisLabel:{formatter:v=>v*100+'%'},splitLine:{show:false}}]},
+  r2:{tooltip:{position:'top'},grid:{left:8,right:16,top:8,bottom:40,containLabel:true},xAxis:{type:'category',data:h.months},yAxis:{type:'category',data:h.owners,inverse:true},visualMap:{min:0,max:Math.max(1,...h.data.flat()),orient:'horizontal',left:'center',bottom:0,itemHeight:90,inRange:{color:['#EEF1FB','#4C5FD7']}},series:[{type:'heatmap',data:h.data.flatMap((r,i)=>r.map((v,j)=>[j,i,v])),label:{show:true,fontSize:10}}]}};
+ if(t=='qa')return {r3:bar(qp.map(x=>x.name.replace(' (abbreviated names)','')),[{name:'QA required',data:qp.map(x=>x.qa_entries),color:COL.iqa,stack:'a'},{name:'Self-QA only',data:qp.map(x=>x.self_entries),color:COL.design,stack:'a'}],{rot:20}),
+  r4:bar(qp.map(x=>x.name.replace(' (abbreviated names)','')),[{name:'Quality',data:qp.map(x=>x.quality),color:COL.iqa,label:{show:true,formatter:x=>x.value==null?'':pct(x.value)}}],{pct:1,max:1.1,rot:20})};
+ return {r5:hbar(S.D.am,COL.design)}}
+
+function quality(){const Qd=S.D.quality,k=S.D.kpi,c=Qd.customer;
+return `${note('<b>Two separate measures — do not mix them.</b> <span style="color:'+COL.iqa+'">First-draft QA</span> is internal QA of production output before delivery. <span style="color:'+COL.ext+'">Q1</span> is the separate Q1 QA track (its definition is not in the workbook). Both are Σ OK ÷ Σ tested.')}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 my-4">${kpi('First-draft quality',pct(k.fd_quality),`${n(k.fd_tested)} products · ${k.fd_entries} entries`,COL.iqa)}${kpi('Q1 catalog quality',pct(k.q1_quality),`${n(k.q1_tested)} products · ${k.q1_rows} entries`,COL.ext)}${kpi('Delivered entries with customer feedback',pct(c.with_feedback/c.delivered),`${c.with_feedback} of ${c.delivered}`,COL.pend)}${kpi('Entries needing iterations',c.iter_known?pct(c.iter_gt0/c.iter_known):'—',`${c.iter_gt0} of ${c.iter_known} with iteration count`,COL.pend)}</div>
+<div class="grid lg:grid-cols-2 gap-4">${box('Quality by catalog type','q1',300,'Tooltip shows products tested — small bases are unstable')}${box('Quality by region / POS','q2',300)}${box('Quality by contract type','q3',300)}${box('Internal QA vs customer-found issues by gate','q4',300,'Internal QA finds issues before delivery; customer-found issues are a leading indicator of escapes')}</div>`}
+function qualityC(){const Q=S.D.quality,I=S.D.iqa;const g=(a)=>bar(a.map(x=>x.name),[{name:'1st draft',data:a.map(x=>x.fd_quality),color:COL.iqa},{name:'Q1',data:a.map(x=>x.q1_quality),color:COL.ext}],{pct:1,max:1,rot:15});
+ const mk=a=>{const o=g(a);o.tooltip={trigger:'axis',confine:true,formatter:p=>{const r=a[p[0].dataIndex];return `<b>${esc(r.name)}</b><br>1st draft: ${pct(r.fd_quality)} (${n(r.fd_tested)} tested)<br>Q1: ${pct(r.q1_quality)} (${n(r.q1_tested)} tested)`}};return o};
+ return {q1:mk(Q.by_type),q2:mk(Q.by_pos),q3:mk(Q.by_contract),q4:bar(I.gates_first.map(x=>x.name),[{name:'Internal QA (1st draft)',data:I.gates_first.map(x=>x.value),color:COL.iqa},{name:'Customer (post-delivery)',data:I.gates_customer.map(x=>x.value),color:COL.pend}],{rot:12})}}
+
+function explorer(){const E=S.ex;let r=S.D.records.filter(x=>(!E.q||(x.name+x.mfr+x.owner+(x.person||'')).toLowerCase().includes(E.q.toLowerCase()))&&(!E.status||x.status==E.status)&&(!E.route||x.qareq==E.route));
+r.sort((a,b)=>{const A=a[E.sort],B=b[E.sort];return (A==null)-(B==null)||(A>B?1:A<B?-1:0)*E.dir});S.ER=r;const pg=r.slice(E.page*40,E.page*40+40);
+const rts=[...new Set(S.D.records.map(x=>x.qareq).filter(Boolean))],st=[...new Set(S.D.records.map(x=>x.status))];
+const th=(k,l,num)=>({h:l+(E.sort==k?(E.dir>0?' ▲':' ▼'):''),num,k});
+return `<div class="flex flex-wrap gap-2 mb-3"><input placeholder="Search project, manufacturer, owner, QA person…" class="w-80" value="${esc(E.q)}" oninput="S.ex.q=this.value;S.ex.page=0;clearTimeout(window._t);window._t=setTimeout(draw,250)" id="srch">
+<select onchange="S.ex.status=this.value;S.ex.page=0;draw()"><option value="">Any status</option>${st.map(x=>`<option ${E.status==x?'selected':''}>${x}</option>`).join('')}</select>
+<select onchange="S.ex.route=this.value;S.ex.page=0;draw()"><option value="">Any QA route</option>${rts.map(x=>`<option ${E.route==x?'selected':''}>${esc(x)}</option>`).join('')}</select>
+<button class="btn ghost ml-auto" onclick="csv()">Download ${n(r.length)} rows (CSV)</button></div>
+<div class="card p-0 overflow-hidden"><div class="overflow-auto max-h-[62vh]"><table><thead><tr>${[['name','Project'],['owner','Owner'],['pos','POS'],['status','Status'],['start','Start'],['act','Delivered'],['est','Est h',1],['cons','Used h',1],['qareq','QA route'],['t1','Tested',1],['fdq','1st-draft quality',1],['q1q','Q1 quality',1]].map(([k,l,nm])=>`<th class="${nm?'num':''}" onclick="S.ex.dir=S.ex.sort=='${k}'?-S.ex.dir:1;S.ex.sort='${k}';draw()">${l}${E.sort==k?(E.dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>
+${pg.map((x,i)=>`<tr class="row" onclick="detail(${E.page*40+i})"><td>${esc(x.name.slice(0,60))}</td><td>${esc(x.owner)}</td><td>${esc((x.pos||'').replace('-Design',''))}</td><td>${x.status}</td><td>${x.start||'—'}</td><td>${x.act||'—'}</td><td class="num">${d1(x.est)}</td><td class="num">${d1(x.cons)}</td><td>${esc((x.qareq||'—').replace('Delivered with ',''))}</td><td class="num">${n(x.t1)}</td><td class="num">${qchip(x.fdq)}</td><td class="num">${qchip(x.q1q)}</td></tr>`).join('')}</tbody></table></div>
+<div class="flex items-center gap-3 p-3 text-sm text-slate-500"><button class="btn ghost" ${E.page?'':'disabled'} onclick="S.ex.page--;draw()">Prev</button>Page ${E.page+1} of ${Math.max(1,Math.ceil(r.length/40))}<button class="btn ghost" onclick="S.ex.page=Math.min(S.ex.page+1,${Math.max(0,Math.ceil(r.length/40)-1)});draw()">Next</button></div></div>`}
+function detail(i){const x=S.ER[i],f=(l,v)=>`<div class="flex justify-between py-1.5 border-b border-slate-100 text-sm"><span class="text-slate-500">${l}</span><span class="text-right ml-4">${v==null||v===''?'—':esc(v)}</span></div>`;
+ document.getElementById('drawer').innerHTML=`<div class="fixed inset-0 bg-black/30 z-40" onclick="this.parentNode.innerHTML=''"></div><div class="fixed right-0 top-0 h-full w-[460px] bg-white z-50 p-6 overflow-auto fade shadow-2xl"><div class="text-xs text-slate-400">Excel row ${x.row}</div><div class="text-lg font-semibold mb-4">${esc(x.name)}</div>
+ <div class="font-medium mt-2">Project</div>${f('Manufacturer',x.mfr)}${f('Catalog type',x.type)}${f('Region / POS',x.pos)}${f('Contract',x.contract)}${f('Work type',x.work)}${f('Owner',x.owner)}${f('Account manager',x.am)}${f('Phase',x.phase)}${f('On track',x.track)}${f('Not-on-track comment',x.why)}
+ <div class="font-medium mt-4">Delivery & hours</div>${f('Start',x.start)}${f('Proposed delivery',x.prop)}${f('Actual delivery',x.act)}${f('Days vs proposed',x.late)}${f('Estimated / used h',d1(x.est)+' / '+d1(x.cons))}${f('Acceptance',x.acc)}${f('Iterations',x.iter)}${f('Post-delivery requests / corrections',(x.pdreq??'—')+' / '+(x.corr??'—'))}
+ <div class="font-medium mt-4">QA</div>${f('QA route',x.qareq)}${f('1st-draft status',x.qs1)}${f('QA / Self-QA person',x.person)}${f('Requested / tested / OK / not OK',[x.r1,x.t1,x.ok1,x.no1].map(v=>v??'—').join(' / '))}${f('1st-draft quality (recomputed)',pct(x.fdq))}${f('QA hours',x.qah)}${f('Q1 tested / OK',(x.q1t??'—')+' / '+(x.q1ok??'—'))}${f('Q1 quality',pct(x.q1q))}${f('QA report',x.rep)}</div>`}
+function csv(){const k=Object.keys(S.ER[0]),t=[k.join(',')].concat(S.ER.map(r=>k.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(','))).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='project_explorer_export.csv';a.click()}
+
+function dqpage(){const q=S.dq,m=S.meta,sv={warn:'warn',info:'info'};const sc=(S.schema||[]).filter(c=>!S.schQ||(c.header+c.category+c.role).toLowerCase().includes(S.schQ.toLowerCase()));
+return `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">${kpi('Uploaded file',esc(m.filename).slice(0,24),`${m.uploaded} · ${m.size_kb} KB`,COL.mute)}${kpi('Records read',n(q.rows),`${q.template_rows} template row excluded`)}${kpi('Warnings',q.warnings.filter(w=>w.severity=='warn').length,`${q.warnings.length} findings total`,COL.pend)}${kpi('Empty columns',q.empty.length,'headers with no data',COL.mute)}</div>
+<div class="grid lg:grid-cols-2 gap-4"><div class="card"><div class="font-semibold mb-3">Validation findings</div><div class="space-y-2">${q.warnings.map(w=>`<div class="${sv[w.severity]} rounded-lg p-3 text-[13px]"><b>${w.area}</b>${w.count!=null?` <span class="pill">${w.count}</span>`:''}<div class="text-slate-600 mt-0.5">${esc(w.message)}</div></div>`).join('')}${q.notes.map(x=>`<div class="text-xs text-slate-500">• ${esc(x)}</div>`).join('')}</div></div>
+<div class="space-y-4"><div class="card"><div class="font-semibold mb-2">Values not in the List sheet</div>${tbl([{h:'Field',k:'field'},{h:'Count',num:1,k:'count'},{h:'Examples',f:r=>esc(Object.entries(r.values).map(([a,b])=>`${a} (${b})`).join('; '))}],q.invalid)}</div>
+<div class="card"><div class="font-semibold mb-2">Upload history</div>${tbl([{h:'File',k:'filename'},{h:'Uploaded',k:'uploaded'},{h:'Rows',num:1,k:'rows'},{h:'Warnings',num:1,k:'warnings'}],S.hist)}</div></div></div>
+<div class="card mt-4"><div class="flex items-center gap-3 mb-3"><div class="font-semibold">Column mapping · all ${S.schema.length} columns</div><input placeholder="Filter columns…" value="${esc(S.schQ)}" oninput="S.schQ=this.value;clearTimeout(window._t);window._t=setTimeout(draw,250)" class="ml-auto"><a class="btn ghost" href="/api/schema.csv?token=${S.tok}">Download CSV</a></div>
+${tbl([{h:'Col',k:'letter'},{h:'Header',f:r=>esc(r.header)},{h:'Category',k:'category'},{h:'Type',k:'dtype'},{h:'Populated',num:1,f:r=>`${r.populated} (${Math.round(r.pct*100)}%)`},{h:'Formulas',num:1,k:'formulas'},{h:'Use',k:'role'},{h:'Meaning (from Notes)',f:r=>esc((r.meaning||'').slice(0,90))}],sc,'max-h-[420px]')}</div>`}
+
+/* ---------- render ---------- */
+function draw(){CH.forEach(c=>c.dispose());CH=[];Q=[];const app=document.getElementById('app');
+ if(!S.D){app.innerHTML=landing();bind();lucide.createIcons();return}
+ const pg=P.find(p=>p[0]==S.page),fl=!['dq','explorer'].includes(S.page)||S.page=='explorer';
+ const body={overview,design,iqa,ext,res,quality,explorer,dq:dqpage}[S.page]();
+ app.innerHTML=`<div class="flex min-h-screen"><aside class="side w-64 shrink-0 p-4 sticky top-0 h-screen flex flex-col"><div class="text-white text-lg font-semibold px-3 pt-2 pb-1">Cyncly</div><div class="text-xs text-teal-300 px-3 mb-6">Design & QA Intelligence</div>
+ ${P.map(([k,l,i])=>`<div class="nav ${S.page==k?'on':''}" onclick="go('${k}')"><i data-lucide="${i}" style="width:17px;height:17px"></i>${l}</div>`).join('')}
+ <div class="mt-auto px-3 text-xs text-slate-400">${esc(S.meta.filename)}<br>${S.meta.rows} records<div class="nav mt-3 !px-0" onclick="S.D=null;draw()"><i data-lucide="upload" style="width:15px"></i>Upload new workbook</div></div></aside>
+ <main class="flex-1 p-8 min-w-0 fade"><h1 class="text-2xl font-semibold tracking-tight mb-1">${pg[1]}</h1><div class="text-sm text-slate-500 mb-5">${{overview:'Whole-operation summary from the uploaded workbook',design:'Production workflow, hours and delivery',iqa:'Internal QA fields: first draft, second draft and post-delivery',ext:'What the workbook does and does not contain for External QA',res:'Workload and quality by owner and QA person',quality:'Catalog quality across QA tracks',explorer:'Search and inspect every record',dq:'Validation, schema and column mapping'}[S.page]}</div>
+ ${S.page!='dq'?filters():''}${body}</main></div>`;
+ const C={overview:overviewC,design:designC,iqa:iqaC,ext:extC,res:resC,quality:qualityC}[S.page];
+ if(C){const o=C();Q.forEach(id=>{if(o[id]){const c=echarts.init(document.getElementById(id));c.setOption(o[id]);CH.push(c)}})}
+ lucide.createIcons();if(S.page=='explorer'&&document.activeElement.id!='srch'&&S.ex.q){const s=document.getElementById('srch');s.focus();s.setSelectionRange(99,99)}}
+function bind(){const dz=document.getElementById('dz'),fi=document.getElementById('fi');if(!dz)return;fi.onchange=()=>fi.files[0]&&upload(fi.files[0]);
+ ['dragover','dragenter'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('hot')}));['dragleave','drop'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.remove('hot')}));dz.addEventListener('drop',ev=>ev.dataTransfer.files[0]&&upload(ev.dataTransfer.files[0]))}
+window.addEventListener('resize',()=>CH.forEach(c=>c.resize()));
+fetch('/api/history').then(r=>r.json()).then(h=>{S.hist=h;if(!S.D)draw()}).catch(()=>{});draw();
+</script></body></html>

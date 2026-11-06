@@ -1,0 +1,100 @@
+letter,header,category,dtype,populated,pct,formulas,distinct,role,meaning,notes_letter
+A,Project Name,Project,text,619,1.0,0,573,Descriptor / drilldown,Project Details - For Dashboard,A
+B,Manufacturer Name,Project,text,619,1.0,0,141,Descriptor / drilldown,Project Details - For Dashboard,B
+C,Type of Catalog,Project,text,619,1.0,0,5,Dimension / filter,Project Details - For Dashboard,C
+D,Project Codes,Project,text,619,1.0,0,180,Descriptor / drilldown,Project Details - For Dashboard,D
+E,Region & POS,Project,text,619,1.0,0,2,Dimension / filter,Project Details - For Dashboard,E
+F,Contract Type,Project,text,619,1.0,0,7,Dimension / filter,Project Details - For Dashboard,F
+G,Work Type,Project,text,619,1.0,0,2,Dimension / filter,To Track whick type of work request received from customer  - For Dashboard,G
+H,Account Manager,Resource,text,619,1.0,0,16,Dimension / filter,Project Details as well as internal tracking,H
+I,Project Owner,Resource,text,619,1.0,0,21,Dimension / filter,Project Details - For Dashboard,I
+J,Phase,Project,text,619,1.0,0,6,Dimension / filter,To Track Project Phase - For Dashboard,J
+K,Content Development at,Project,text,619,1.0,0,1,Dimension / filter,Project Details - For Dashboard,K
+L,Estimated Hours,Hours & progress,number,619,1.0,27,77,KPI / measure,Project Details - For Dashboard,L
+M,Consumption hours,Hours & progress,number,619,1.0,17,72,KPI / measure,Project Details - For Dashboard,M
+N,% of Hour Consumption,Hours & progress,mixed,619,1.0,617,42,Descriptor / drilldown,To track hours consumption against estimated/to find overrun project - For Dashboard,N
+O,% of Project Completion,Hours & progress,mixed,619,1.0,617,33,Descriptor / drilldown,"To track project completion against Project phase, Acceptance received & hours consumption - For Dashboard",O
+P,Contract Date,Schedule,date,618,0.998,0,148,Date - trend axis,Project Details - For Dashboard,P
+Q,Budget Approved Date,Schedule,date,603,0.974,0,176,Date - trend axis,Not documented in Notes sheet,
+R,Initial Input Available Date,Schedule,date,612,0.989,0,200,Date - trend axis,Not documented in Notes sheet,
+S,Final Input Available Date,Schedule,date,596,0.963,0,178,Date - trend axis,Not documented in Notes sheet,
+T,Project Start Date,Schedule,date,617,0.997,0,182,Date - trend axis,To track project under production or not as well as to find number of week consumed to complete project - For Dashboard,Q
+U,Proposed Delivery Date to Customer,Delivery & acceptance,date,611,0.987,0,174,Date - trend axis,To track scheduled delivery/number of delivery scheduled by week/month/quarter/year - For Dashboard,R
+V,Project On Track,Project,text,618,0.998,0,2,Dimension / filter,To track project on track or not - For Dashboard,S
+W,Projects Not on Track - Comment,Comments,text,90,0.145,0,65,Descriptor / drilldown,To find what are those reasons due to we are not able to deliver project on scheduled ETA - For Dashboard,T
+X,New Proposed Delivery Date,Delivery & acceptance,empty,0,0.0,0,0,Not usable (empty),To track project not on track is scheduled or not ,U
+Y,Actual Delivery Date to Customer,Delivery & acceptance,date,573,0.926,0,157,Date - trend axis,To track scheduled delivery can meet or not as well as to find number of days/week consumed to complete project  - For Dashboard,V
+Z,Total Number of iterations till acceptance,Schedule,text,605,0.977,586,5,Dimension / filter,To find total number of catalog correction Iteration only - For Dashboard ,W
+AA,1st Post Delivery Feedback Received Date,Post-delivery feedback,date,124,0.2,0,75,Date - trend axis,To find number of feedback received for specific project as well as Current month & week/Last month & week against delivered -  for Dashboard,X
+AB,2nd Post Delivery Feedback Received Date,Post-delivery feedback,date,31,0.05,0,25,Date - trend axis,Not documented in Notes sheet,Y
+AC,3rd Post Delivery Feedback Received Date,Post-delivery feedback,date,11,0.018,0,9,Date - trend axis,Not documented in Notes sheet,Z
+AD,4th Post Delivery Feedback Received Date,Post-delivery feedback,date,3,0.005,0,3,Date - trend axis,Not documented in Notes sheet,AA
+AE,5th Post Delivery Feedback Received Date,Post-delivery feedback,date,1,0.002,0,1,Date - trend axis,Not documented in Notes sheet,AB
+AF,Total Number of Post Delivery Request Received,Post-delivery feedback,number,124,0.2,72,16,KPI / measure,To measure catalog customer quality as well as to find types of request trend from customer feedback received - For Dashboard (Column will be filled using  column - X to AB feedback) - For Dashboard,AC
+AG,Total Number of Correction,Post-delivery feedback,number,109,0.176,60,9,KPI / measure,Not documented in Notes sheet,AD
+AH,Total Number of Change Request,Post-delivery feedback,number,120,0.194,66,11,KPI / measure,Not documented in Notes sheet,AE
+AI,Total Number of New addition,Post-delivery feedback,number,68,0.11,42,6,KPI / measure,Not documented in Notes sheet,AF
+AJ,Total Number of Not an issue,Post-delivery feedback,number,70,0.113,44,4,KPI / measure,Not documented in Notes sheet,AG
+AK,Software limitation,Post-delivery feedback,number,61,0.099,41,3,KPI / measure,Not documented in Notes sheet,AH
+AL,Post Delivery Gate 1 - Product Commercial Data and Graphical Data Issue,Post-delivery feedback,number,34,0.055,20,4,KPI / measure,To measure catalog customer quality as well as to find types of correction trend from customer feedback received - For Dashboard (Column will be filled using  column - AD) - For Dashboard,AI
+AM,Post Delivery Gate 2 - Add ons Issue,Post-delivery feedback,number,30,0.048,20,2,KPI / measure,Not documented in Notes sheet,AJ
+AN,Post Delivery Gate 3 - Global Features and Option Issue,Post-delivery feedback,number,32,0.052,20,3,KPI / measure,Not documented in Notes sheet,AK
+AO,Post Delivery Gate 4 - Catalog Pricing Issue,Post-delivery feedback,number,30,0.048,19,3,KPI / measure,Not documented in Notes sheet,AL
+AP,Post Delivery Gate 5 - POS Specific Requirement Issue,Post-delivery feedback,number,29,0.047,19,1,KPI / measure,Not documented in Notes sheet,AM
+AQ,Post Delivery Combination Gate Issue,Post-delivery feedback,number,28,0.045,18,2,KPI / measure,Not documented in Notes sheet,AN
+AR,Proposed Post Delivery Fixes Date to Customer,Delivery & acceptance,date,116,0.187,0,67,Date - trend axis,To Track Post Delivery Catalog QA and Post Delivery update Project Tracking  - For Dashboard,AO
+AS,Latest Delivery Date-2nd,Delivery & acceptance,date,121,0.195,0,73,Date - trend axis,To find Total Number of Catalog Iteration - Column W (Only for Correction Delivery or Delivery contain any single correction)  - For Dashboard,AP
+AT,Latest Delivery Date-3rd,Delivery & acceptance,date,29,0.047,0,22,Date - trend axis,Not documented in Notes sheet,AQ
+AU,Latest Delivery Date-4th,Delivery & acceptance,date,6,0.01,0,5,Date - trend axis,Not documented in Notes sheet,AR
+AV,Latest Delivery Date-5th,Delivery & acceptance,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,AS
+AW,Latest Delivery Date to Customer,Delivery & acceptance,date,573,0.926,609,152,Date - trend axis,"1. To track latest delivery with customer 
+2. To track catalog delivery against customer feedback received ",AT
+AX,Warranty End Date,Delivery & acceptance,date,562,0.908,0,162,Date - trend axis,To follow up with customer for catalog approval,AU
+AY,Project closed email sent Date,Delivery & acceptance,text,75,0.121,0,5,Dimension / filter,To track project code closed or not if catalog approved,AV
+AZ,Backup Uploaded On VSTS,Delivery & acceptance,text,322,0.52,0,2,Dimension / filter,To track latest data uploaded on VSTS or Not,AW
+BA,Acceptance received (YES/NO),Delivery & acceptance,text,611,0.987,504,2,Dimension / filter,To find Count for for Number of Catalog Catalog Acceptance Received and Pending - For Dashboard,AX
+BB,Acceptance received Date,Delivery & acceptance,date,539,0.871,2,156,Date - trend axis,To find number of catalog approval received by week/Month/Quarter/Year against catalog Delivery - For Dashboard,AY
+BC,Catalogue Publication Date,Delivery & acceptance,date,22,0.036,0,18,Date - trend axis,Not documented in Notes sheet,
+BD,Total 3D Products Created,Project,number,9,0.015,0,8,KPI / measure,Not documented in Notes sheet,
+BE,Project Owner Comments,Resource,text,487,0.787,0,151,Descriptor / drilldown,For Project Specific Comments,AZ
+BF,QA Required at Cyncly,Internal QA,text,615,0.994,0,6,Dimension / filter,"To Track QA Status - For QA Dashboard
+1. Post Production Draft 1 QA
+2. Post Production Draft 2 QA
+3. Post Delivery QA",BA
+BG,Proposed Delivery Date to QA - 1st Draft,Internal QA,date,141,0.228,0,83,Date - trend axis,Not documented in Notes sheet,BB
+BH,QA hours,Internal QA,number,130,0.21,0,20,KPI / measure,Not documented in Notes sheet,
+BI,QA Status - 1st Draft,Internal QA,text,279,0.451,0,6,Dimension / filter,Not documented in Notes sheet,BC
+BJ,Total No. of Product/Update Requested by Client - 1st Draft,Internal QA,number,104,0.168,2,74,KPI / measure,Not documented in Notes sheet,BD
+BK,Total No. of Product/Update Testing Done By QA - 1st Draft,Internal QA,number,104,0.168,2,68,KPI / measure,Not documented in Notes sheet,BE
+BL,Number of OK Product/Update - 1st Draft,Internal QA,number,104,0.168,2,65,KPI / measure,Not documented in Notes sheet,BF
+BM,Number of Not OK Product/Update - 1st Draft,Internal QA,number,95,0.153,2,28,KPI / measure,Not documented in Notes sheet,BG
+BN,1st Draft Gate 1 - Product Commercial Data and Graphical Data Issue,Internal QA,number,50,0.081,2,18,KPI / measure,Not documented in Notes sheet,BH
+BO,1st Draft Gate 2 - Add ons Issue,Internal QA,number,38,0.061,0,6,KPI / measure,Not documented in Notes sheet,BI
+BP,1st Draft Gate 3 - Global Features and Option Issue,Internal QA,number,54,0.087,2,4,KPI / measure,Not documented in Notes sheet,BJ
+BQ,1st Draft Gate 4 - Catalog Pricing Issue,Internal QA,number,54,0.087,2,3,KPI / measure,Not documented in Notes sheet,BK
+BR,1st Draft Gate 5 - POS Specific Requirement Issue,Internal QA,number,47,0.076,0,1,KPI / measure,Not documented in Notes sheet,BL
+BS,1st Draft - Combination Gate Issue,Internal QA,number,47,0.076,0,2,KPI / measure,Not documented in Notes sheet,BM
+BT,Number of 1st Draft QA Queries,Internal QA,number,56,0.09,0,2,KPI / measure,Not documented in Notes sheet,BN
+BU,Quality Check After Production - 1st Draft,Internal QA,mixed,385,0.622,366,64,Descriptor / drilldown,Not documented in Notes sheet,BO
+BV,Proposed Delivery Date to QA - 2nd Draft,Internal QA,date,6,0.01,0,5,Date - trend axis,Not documented in Notes sheet,BP
+BW,QA Status - 2nd Draft,Internal QA,text,300,0.485,0,4,Dimension / filter,Not documented in Notes sheet,BQ
+BX,Total No. of Product/Update Requested - 2nd Draft,Internal QA,number,4,0.006,0,4,KPI / measure,Not documented in Notes sheet,BR
+BY,Total No. of Product/Update Testing Done By QA - 2nd Draft,Internal QA,number,4,0.006,0,4,KPI / measure,Not documented in Notes sheet,BS
+BZ,Number of OK Product/Update - 2nd Draft,Internal QA,number,4,0.006,0,4,KPI / measure,Not documented in Notes sheet,BT
+CA,Number of Not OK Product/Update - 2nd Draft,Internal QA,number,13,0.021,0,1,KPI / measure,Not documented in Notes sheet,BU
+CB,Quality Check After Production - 2nd Draft,Internal QA,mixed,14,0.023,12,2,Dimension / filter,Not documented in Notes sheet,BV
+CC,Proposed Post Delivery Date to QA,Internal QA,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,BW
+CD,Post Delivery QA Status,Internal QA,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,BX
+CE,Total No. of Post Delivery Updates,Delivery & acceptance,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,BY
+CF,Total No. of Post Delivery Updates Testing Done By QA,Internal QA,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,BZ
+CG,No. of Ok Post Delivery Updates,Delivery & acceptance,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,CA
+CH,No. of Not Ok Post Delivery Updates,Delivery & acceptance,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,CB
+CI,No. of Post Delivery QA Queries,Internal QA,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,CC
+CJ,Quality Check After Post Delivery Updates,Internal QA,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,CD
+CK,QA Report Location,Internal QA,text,85,0.137,0,56,Descriptor / drilldown,Not documented in Notes sheet,CE
+CL,Responsible QA/Self QA Person,Resource,text,118,0.191,0,9,Dimension / filter,Not documented in Notes sheet,
+CM,CG,Internal QA,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,
+CN,Sales Comments,Comments,empty,0,0.0,0,0,Not usable (empty),Not documented in Notes sheet,CH
+CO,Number Of Product/Feedback Tested in Q1,Q1 QA,number,40,0.065,0,19,KPI / measure,Not documented in Notes sheet,
+CP,"Number Of Product/Feedback ""OK"" in Q1",Q1 QA,number,40,0.065,0,16,KPI / measure,Not documented in Notes sheet,
+CQ,Catalog Quality in Q1 %,Q1 QA,mixed,56,0.09,46,14,Dimension / filter,Not documented in Notes sheet,
